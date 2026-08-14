@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบสอบออนไลน์ - เข้าสู่ระบบ</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="login-body">
+    <div class="login-container">
+        <h1>เข้าสู่ระบบเพื่อทำแบบทดสอบ</h1>
+        <p class="subtitle">วิชาความรู้เบื้องต้นและเทคโนโลยีดิจิทัล</p>
+        
+        {% if error %}
+        <div class="alert alert-error">{{ error }}</div>
+        {% endif %}
+        
+        <form method="POST" action="{{ url_for('index') }}" class="login-form">
+            <div class="form-group">
+                <label for="student_code">รหัสนักศึกษา</label>
+                <input type="text" id="student_code" name="student_code" placeholder="เช่น 6601234567" required autofocus>
+            </div>
+            
+            <div class="form-group">
+                <label for="fullname">ชื่อ - นามสกุล</label>
+                <input type="text" id="fullname" name="fullname" placeholder="เช่น สมชาย ใจดี" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">เข้าสู่ระบบ / เริ่มทำข้อสอบ</button>
+        </form>
+    </div>
+</body>
+</html>

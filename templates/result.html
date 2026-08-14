@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ผลการทำแบบทดสอบ</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="login-body">
+    <div class="login-container result-container">
+        <h1>ส่งคำตอบเรียบร้อยแล้ว!</h1>
+        <p class="subtitle">คุณ {{ student_name }} ทำแบบทดสอบเสร็จสิ้น</p>
+        
+        <div class="score-card">
+            <div class="score-label">คะแนนที่คุณทำได้</div>
+            <div class="score-value">{{ score }} <span class="total-score">/ {{ total }}</span></div>
+        </div>
+        
+        <div class="result-actions">
+            <a href="{{ url_for('index') }}" class="btn btn-outline">กลับสู่หน้าแรก</a>
+        </div>
+    </div>
+</body>
+</html>

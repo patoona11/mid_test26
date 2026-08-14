@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แบบทดสอบกลางภาค</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="quiz-body">
+    <nav class="navbar">
+        <div class="nav-content">
+            <span class="brand">ระบบสอบออนไลน์</span>
+            <span id="timer" class="timer-display">เวลาคงเหลือ: 90:00</span>
+            <span class="user-info">ผู้สอบ: <strong>{{ student_name }}</strong></span>
+        </div>
+    </nav>
+    
+    <main class="quiz-container">
+        <header class="quiz-header">
+            <h1>แบบทดสอบกลางภาค</h1>
+            <p>กรุณาเลือกคำตอบที่ถูกต้องที่สุดเพียงข้อเดียว เมื่อทำเสร็จแล้วให้กดปุ่ม "ส่งคำตอบ" ที่ด้านล่างสุด</p>
+        </header>
+
+        <form id="quizForm" method="POST" action="{{ url_for('quiz') }}">
+            {% for cat in quiz_data %}
+            <section class="category-section">
+                <h2 class="category-title">{{ cat.name }}</h2>
+                
+                <div class="questions-list">
+                    {% for q in cat.questions %}
+                    <div class="question-card">
+                        <h3 class="question-text">{{ loop.index }}. {{ q.question_text }}</h3>
+                        <div class="choices">
+                            {% set choices = [('ก', q.choice_a), ('ข', q.choice_b), ('ค', q.choice_c), ('ง', q.choice_d), ('จ', q.choice_e)] %}
+                            
+                            {% for letter, text in choices %}
+                                {% if text %}
+                                <label class="choice-label">
+                                    <input type="radio" name="question_{{ q.id }}" value="{{ letter }}" required>
+                                    <span class="choice-letter">{{ letter }}.</span>
+                                    <span class="choice-text">{{ text }}</span>
+                                </label>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endfor %}
+            
+            <div class="submit-section">
+                <button type="submit" class="btn btn-primary btn-large" onclick="return confirm('คุณตรวจสอบคำตอบเรียบร้อยแล้ว และต้องการส่งคำตอบใช่หรือไม่?')">ส่งคำตอบ</button>
+            </div>
+        </form>
+    </main>
+
+    <script>
+        // --- Timer Logic ---
+        const EXAM_DURATION_MINUTES = 90; // กำหนดเวลาสอบ (นาที)
+        let timeRemaining = EXAM_DURATION_MINUTES * 60;
+        
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            document.getElementById('timer').innerText = `เวลาคงเหลือ: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Change color to red when less than 5 minutes
+            if (timeRemaining < 300) {
+                document.getElementById('timer').style.color = 'var(--error)';
+            }
+        }
+        
+        const timerInterval = setInterval(() => {
+            timeRemaining--;
+            if (timeRemaining >= 0) {
+                updateTimerDisplay();
+            }
+            
+            if (timeRemaining <= 0) {
+                clearInterval(timerInterval);
+                alert("⏰ หมดเวลาทำข้อสอบ! ระบบกำลังส่งคำตอบของคุณอัตโนมัติ");
+                document.removeEventListener("visibilitychange", handleVisibilityChange);
+                window.removeEventListener("blur", handleWindowBlur);
+                document.getElementById('quizForm').submit();
+            }
+        }, 1000);
+
+        // --- Anti-Cheat Logic ---
+        function triggerWarning() {
+            alert("❌ ตรวจพบการเปิดโปรแกรมหรือสลับหน้าต่างอื่น ระบบจะบังคับส่งข้อสอบของคุณและสิ้นสุดการสอบทันที!");
+            
+            // Remove warning event listeners so it doesn't trigger repeatedly while submitting
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            window.removeEventListener("blur", handleWindowBlur);
+            
+            // Submit the form
+            document.getElementById('quizForm').submit();
+        }
+
+        function handleVisibilityChange() {
+            if (document.hidden) {
+                triggerWarning();
+            }
+        }
+        
+        function handleWindowBlur() {
+            triggerWarning();
+        }
+        
+        // Listen to tab switching or minimizing
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        // Listen to window losing focus (clicking outside the browser)
+        window.addEventListener("blur", handleWindowBlur);
+    </script>
+</body>
+</html>
