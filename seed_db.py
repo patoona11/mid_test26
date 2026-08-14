@@ -23,7 +23,7 @@ def setup_database():
     cursor.execute('''
         CREATE TABLE students (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            student_code TEXT NOT NULL UNIQUE,
+            student_code INTEGER NOT NULL UNIQUE,
             fullname TEXT NOT NULL
         )
     ''')
