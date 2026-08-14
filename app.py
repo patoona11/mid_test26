@@ -1,4 +1,5 @@
-import sqlite3
+import psycopg2
+import psycopg2.extras
 from flask import Flask, render_template, request, redirect, url_for, session
 import os
 import random
@@ -6,11 +7,10 @@ import random
 app = Flask(__name__)
 app.secret_key = 'super_secret_key_for_quiz'
 
-DB_PATH = os.path.join(os.path.dirname(__file__), 'quiz.db')
+DB_URL = os.environ.get("DATABASE_URL", "postgresql://postgres:midtest%402026@db.somnbanbnkhzfqyhmxnb.supabase.co:5432/postgres")
 
 def get_db_connection():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = psycopg2.connect(DB_URL)
     return conn
 
 @app.route('/', methods=['GET', 'POST'])
@@ -23,19 +23,19 @@ def index():
             return render_template('index.html', error="กรุณากรอกข้อมูลให้ครบถ้วน")
             
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         
         # Check if student exists, else insert
-        cursor.execute('SELECT id FROM students WHERE student_code = ?', (student_code,))
+        cursor.execute('SELECT id FROM students WHERE student_code = %s', (student_code,))
         student = cursor.fetchone()
         
         if student:
             student_id = student['id']
             # Update name just in case it changed
-            cursor.execute('UPDATE students SET fullname = ? WHERE id = ?', (fullname, student_id))
+            cursor.execute('UPDATE students SET fullname = %s WHERE id = %s', (fullname, student_id))
         else:
-            cursor.execute('INSERT INTO students (student_code, fullname) VALUES (?, ?)', (student_code, fullname))
-            student_id = cursor.lastrowid
+            cursor.execute('INSERT INTO students (student_code, fullname) VALUES (%s, %s) RETURNING id', (student_code, fullname))
+            student_id = cursor.fetchone()['id']
             
         conn.commit()
         conn.close()
@@ -52,7 +52,7 @@ def quiz():
         return redirect(url_for('index'))
         
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     
     if request.method == 'POST':
         # Grade the quiz
@@ -70,7 +70,7 @@ def quiz():
                 
         # Save score
         student_id = session['student_id']
-        cursor.execute('INSERT INTO scores (student_id, score, total_score) VALUES (?, ?, ?)', (student_id, score, total))
+        cursor.execute('INSERT INTO scores (student_id, score, total_score) VALUES (%s, %s, %s)', (student_id, score, total))
         conn.commit()
         conn.close()
         
@@ -85,7 +85,7 @@ def quiz():
     quiz_data = []
     for cat in categories:
         cat_dict = dict(cat)
-        cursor.execute('SELECT * FROM questions WHERE category_id = ?', (cat['id'],))
+        cursor.execute('SELECT * FROM questions WHERE category_id = %s', (cat['id'],))
         questions_list = [dict(q) for q in cursor.fetchall()]
         random.shuffle(questions_list)  # Shuffle questions within the category
         cat_dict['questions'] = questions_list
