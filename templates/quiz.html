@@ -22,32 +22,26 @@
         </header>
 
         <form id="quizForm" method="POST" action="{{ url_for('quiz') }}">
-            {% for cat in quiz_data %}
-            <section class="category-section">
-                <h2 class="category-title">{{ cat.name }}</h2>
-                
-                <div class="questions-list">
-                    {% for q in cat.questions %}
-                    <div class="question-card">
-                        <h3 class="question-text">{{ loop.index }}. {{ q.question_text }}</h3>
-                        <div class="choices">
-                            {% set choices = [('ก', q.choice_a), ('ข', q.choice_b), ('ค', q.choice_c), ('ง', q.choice_d), ('จ', q.choice_e)] %}
-                            
-                            {% for letter, text in choices %}
-                                {% if text %}
-                                <label class="choice-label">
-                                    <input type="radio" name="question_{{ q.id }}" value="{{ letter }}" required>
-                                    <span class="choice-letter">{{ letter }}.</span>
-                                    <span class="choice-text">{{ text }}</span>
-                                </label>
-                                {% endif %}
-                            {% endfor %}
-                        </div>
+            <div class="questions-list">
+                {% for q in all_questions %}
+                <div class="question-card">
+                    <h3 class="question-text">{{ loop.index }}. <span class="category-badge" style="font-size: 0.8rem; background: #fad0c4; padding: 2px 8px; border-radius: 10px; color: #555; margin-right: 10px;">{{ q.category_name }}</span> {{ q.question_text }}</h3>
+                    <div class="choices">
+                        {% set choices = [('ก', q.choice_a), ('ข', q.choice_b), ('ค', q.choice_c), ('ง', q.choice_d), ('จ', q.choice_e)] %}
+                        
+                        {% for letter, text in choices %}
+                            {% if text %}
+                            <label class="choice-label">
+                                <input type="radio" name="question_{{ q.id }}" value="{{ letter }}" required>
+                                <span class="choice-letter">{{ letter }}.</span>
+                                <span class="choice-text">{{ text }}</span>
+                            </label>
+                            {% endif %}
+                        {% endfor %}
                     </div>
-                    {% endfor %}
                 </div>
-            </section>
-            {% endfor %}
+                {% endfor %}
+            </div>
             
             <div class="submit-section">
                 <button type="submit" class="btn btn-primary btn-large" onclick="return confirm('คุณตรวจสอบคำตอบเรียบร้อยแล้ว และต้องการส่งคำตอบใช่หรือไม่?')">ส่งคำตอบ</button>

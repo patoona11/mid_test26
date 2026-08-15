@@ -92,19 +92,18 @@ def quiz():
         return redirect(url_for('result'))
 
     # Load quiz data for GET request
-    cat_resp = supabase.table('categories').select('*').execute()
-    categories = cat_resp.data
+    response = supabase.table('categories').select('*, questions(*)').execute()
+    categories = response.data
     
-    quiz_data = []
+    all_questions = []
     for cat in categories:
-        cat_dict = dict(cat)
-        q_resp = supabase.table('questions').select('*').eq('category_id', cat['id']).execute()
-        questions_list = q_resp.data
-        random.shuffle(questions_list)  # Shuffle questions within the category
-        cat_dict['questions'] = questions_list
-        quiz_data.append(cat_dict)
+        for q in cat['questions']:
+            q['category_name'] = cat['name']
+            all_questions.append(q)
+        
+    random.shuffle(all_questions)
     
-    return render_template('quiz.html', quiz_data=quiz_data, student_name=session['student_name'])
+    return render_template('quiz.html', all_questions=all_questions, student_name=session['student_name'])
 
 @app.route('/result')
 def result():
