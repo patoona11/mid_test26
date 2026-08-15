@@ -117,5 +117,11 @@ def result():
     
     return render_template('result.html', score=score, total=total, student_name=session['student_name'], time_taken=time_taken)
 
+@app.route('/admin')
+def admin():
+    # Fetch all scores with student details from Supabase
+    response = supabase.table('scores').select('id, score, total_score, timestamp, students(student_code, fullname)').order('timestamp', desc=True).execute()
+    return render_template('admin.html', scores=response.data)
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

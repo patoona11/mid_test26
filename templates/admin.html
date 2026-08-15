@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบรายงานผลคะแนน | Midterm Quiz</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        .admin-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            background: white;
+            border-radius: 30px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(255, 154, 158, 0.2);
+            border: 4px solid #fad0c4;
+        }
+        .admin-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .table-responsive {
+            overflow-x: auto;
+        }
+        .score-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+        }
+        .score-table th {
+            background-color: #ff9a9e;
+            color: white;
+            padding: 1rem;
+            font-size: 1.1rem;
+            border-radius: 10px;
+        }
+        .score-table td {
+            padding: 1rem;
+            border-bottom: 2px dashed #fad0c4;
+            color: #555;
+        }
+        .score-table tr:last-child td {
+            border-bottom: none;
+        }
+        .score-table tr:hover td {
+            background-color: #fff0f5;
+        }
+        .score-highlight {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #ff6b81;
+        }
+        .empty-state {
+            text-align: center;
+            color: #ff9a9e;
+            padding: 2rem;
+            font-size: 1.2rem;
+        }
+        .btn-refresh {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 20px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(161, 140, 209, 0.3);
+            transition: all 0.3s ease;
+        }
+        .btn-refresh:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(161, 140, 209, 0.5);
+        }
+    </style>
+</head>
+<body class="login-body">
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1 class="candy-title">รายงานผลคะแนนนักศึกษา 📊</h1>
+            <p>คะแนนล่าสุดจากฐานข้อมูล</p>
+            <a href="{{ url_for('admin') }}" class="btn-refresh">🔄 รีเฟรชข้อมูล</a>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="score-table">
+                <thead>
+                    <tr>
+                        <th>รหัสนักศึกษา</th>
+                        <th>ชื่อ-นามสกุล</th>
+                        <th>คะแนน</th>
+                        <th>คะแนนเต็ม</th>
+                        <th>เวลาส่งคำตอบ (UTC)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in scores %}
+                    <tr>
+                        <td><strong>{{ row.students.student_code }}</strong></td>
+                        <td>{{ row.students.fullname }}</td>
+                        <td class="score-highlight">{{ row.score }}</td>
+                        <td>{{ row.total_score }}</td>
+                        <td>{{ row.timestamp[:19].replace('T', ' ') }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state">
+                                🌟 ยังไม่มีผู้เข้าสอบในขณะนี้ 🌟
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
