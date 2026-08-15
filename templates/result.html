@@ -8,12 +8,19 @@
 </head>
 <body class="login-body">
     <div class="login-container result-container">
-        <h1>ส่งคำตอบเรียบร้อยแล้ว!</h1>
-        <p class="subtitle">คุณ {{ student_name }} ทำแบบทดสอบเสร็จสิ้น</p>
-        
         <div class="score-card">
-            <div class="score-label">คะแนนที่คุณทำได้</div>
-            <div class="score-value">{{ score }} <span class="total-score">/ {{ total }}</span></div>
+            <h1 class="candy-title">เสร็จสิ้นการทดสอบ!</h1>
+            <p class="student-info">คุณ {{ student_name }}</p>
+            <div class="score-display">
+                <span class="score">{{ score }}</span>
+                <span class="divider">/</span>
+                <span class="total">{{ total }}</span>
+            </div>
+            <p class="time-taken">เวลาที่ใช้ทำข้อสอบ: <strong>{{ time_taken }}</strong></p>
+            
+            {% if score == total %}
+            <p class="congrats">ยอดเยี่ยมมาก!</p>
+            {% endif %}
         </div>
         
         <div class="result-actions">

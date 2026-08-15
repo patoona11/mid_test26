@@ -16,9 +16,13 @@
         {% endif %}
         
         <form method="POST" action="{{ url_for('index') }}" class="login-form">
-            <div class="form-group">
-                <label for="student_code">รหัสนักศึกษา</label>
-                <input type="text" id="student_code" name="student_code" placeholder="เช่น 6601234567" required autofocus inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+            <div class="input-group">
+                <label for="student_code">รหัสนักศึกษา (3 หลักสุดท้าย)</label>
+                <input type="text" id="student_code" name="student_code" required 
+                       pattern="\d{3}" maxlength="3" minlength="3" 
+                       title="กรุณากรอกรหัสนักศึกษา 3 หลักสุดท้ายเท่านั้น" 
+                       placeholder="เช่น 123"
+                       oninput="this.value = this.value.replace(/[^0-9]/g, '')">
             </div>
             
             <div class="form-group">

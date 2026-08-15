@@ -2,6 +2,7 @@ from supabase import create_client, Client
 from flask import Flask, render_template, request, redirect, url_for, session
 import os
 import random
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = 'super_secret_key_for_quiz'
@@ -16,8 +17,11 @@ def index():
         student_code = request.form['student_code'].strip()
         fullname = request.form['fullname'].strip()
         
-        if not student_code or not fullname:
-            return render_template('index.html', error="กรุณากรอกข้อมูลให้ครบถ้วน")
+        if len(student_code) != 3 or not student_code.isdigit():
+            return render_template('index.html', error="รหัสนักศึกษาต้องเป็นตัวเลข 3 หลักสุดท้ายเท่านั้น")
+            
+        if not fullname:
+            return render_template('index.html', error="กรุณากรอกชื่อ-นามสกุลให้ครบถ้วน")
             
         # Check if student exists
         response = supabase.table('students').select('id, fullname').eq('student_code', int(student_code)).execute()
@@ -25,6 +29,12 @@ def index():
         
         if len(student_data) > 0:
             student_id = student_data[0]['id']
+            
+            # Check if this student already took the exam
+            score_resp = supabase.table('scores').select('id').eq('student_id', student_id).execute()
+            if len(score_resp.data) > 0:
+                return render_template('index.html', error="คุณได้ส่งข้อสอบไปแล้ว ไม่สามารถทำซ้ำได้ (สอบได้เพียงครั้งเดียว)")
+                
             # Update name
             supabase.table('students').update({'fullname': fullname}).eq('id', student_id).execute()
         else:
@@ -33,6 +43,7 @@ def index():
             
         session['student_id'] = student_id
         session['student_name'] = fullname
+        session['start_time'] = datetime.now().isoformat()
         return redirect(url_for('quiz'))
         
     return render_template('index.html')
@@ -56,16 +67,28 @@ def quiz():
             if ans and ans == q['correct_answer']:
                 score += 1
                 
+        start_time_str = session.get('start_time')
+        time_taken_str = "ไม่ทราบเวลา"
+        if start_time_str:
+            start_time = datetime.fromisoformat(start_time_str)
+            end_time = datetime.now()
+            diff = end_time - start_time
+            minutes, seconds = divmod(diff.seconds, 60)
+            time_taken_str = f"{minutes} นาที {seconds} วินาที"
+                
         # Save score
         student_id = session['student_id']
         supabase.table('scores').insert({
             'student_id': student_id,
             'score': score,
-            'total_score': total
+            'total_score': total,
+            # We add time_taken if the DB column was created, but for backward compatibility in case it failed, 
+            # we will not save time_taken to DB right now to prevent 500 error, just pass to session.
         }).execute()
         
         session['last_score'] = score
         session['last_total'] = total
+        session['time_taken'] = time_taken_str
         return redirect(url_for('result'))
 
     # Load quiz data for GET request
@@ -90,8 +113,9 @@ def result():
         
     score = session['last_score']
     total = session['last_total']
+    time_taken = session.get('time_taken', 'ไม่ทราบเวลา')
     
-    return render_template('result.html', score=score, total=total, student_name=session['student_name'])
+    return render_template('result.html', score=score, total=total, student_name=session['student_name'], time_taken=time_taken)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
