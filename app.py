@@ -11,20 +11,34 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://somnbanbnkhzfqyhmxnb.supa
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "sb_publishable_Tx6_X9LQu1TYR3oaPZ4YyQ_gJSPse7b")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
+@app.route('/')
+def hub():
+    return render_template('hub.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    subject_id = request.args.get('subject', '1')
+    
+    if subject_id == '1':
+        subject_name = "การประยุกต์ใช้เทคโนโลยีดิจิทัลในอาชีพ"
+    else:
+        subject_name = "การใช้เทคโนโลยีดิจิทัลเพื่ออาชีพ"
+        
     if request.method == 'POST':
         student_code = request.form['student_code'].strip()
         fullname = request.form['fullname'].strip()
         
         if len(student_code) != 3 or not student_code.isdigit():
-            return render_template('index.html', error="รหัสนักศึกษาต้องเป็นตัวเลข 3 หลักสุดท้ายเท่านั้น")
+            return render_template('index.html', error="รหัสนักศึกษาต้องเป็นตัวเลข 3 หลักสุดท้ายเท่านั้น", subject_name=subject_name, subject_id=subject_id)
             
         if not fullname:
-            return render_template('index.html', error="กรุณากรอกชื่อ-นามสกุลให้ครบถ้วน")
+            return render_template('index.html', error="กรุณากรอกชื่อ-นามสกุลให้ครบถ้วน", subject_name=subject_name, subject_id=subject_id)
             
+        # Append subject to fullname to separate them in DB
+        db_fullname = f"{fullname} [{subject_name}]"
+        
         # Check if student exists
-        response = supabase.table('students').select('id, fullname').eq('student_code', int(student_code)).execute()
+        response = supabase.table('students').select('id, fullname').eq('student_code', int(student_code)).eq('fullname', db_fullname).execute()
         student_data = response.data
         
         if len(student_data) > 0:
@@ -33,20 +47,20 @@ def index():
             # Check if this student already took the exam
             score_resp = supabase.table('scores').select('id').eq('student_id', student_id).execute()
             if len(score_resp.data) > 0:
-                return render_template('index.html', error="คุณได้ส่งข้อสอบไปแล้ว ไม่สามารถทำซ้ำได้ (สอบได้เพียงครั้งเดียว)")
+                return render_template('index.html', error="คุณได้ส่งข้อสอบไปแล้ว ไม่สามารถทำซ้ำได้ (สอบได้เพียงครั้งเดียว)", subject_name=subject_name, subject_id=subject_id)
                 
-            # Update name
-            supabase.table('students').update({'fullname': fullname}).eq('id', student_id).execute()
+            # Update name (just in case)
+            supabase.table('students').update({'fullname': db_fullname}).eq('id', student_id).execute()
         else:
-            insert_response = supabase.table('students').insert({'student_code': int(student_code), 'fullname': fullname}).execute()
+            insert_response = supabase.table('students').insert({'student_code': int(student_code), 'fullname': db_fullname}).execute()
             student_id = insert_response.data[0]['id']
             
         session['student_id'] = student_id
-        session['student_name'] = fullname
+        session['student_name'] = db_fullname
         session['start_time'] = datetime.now().isoformat()
         return redirect(url_for('quiz'))
         
-    return render_template('index.html')
+    return render_template('index.html', subject_name=subject_name, subject_id=subject_id)
 
 @app.route('/quiz', methods=['GET', 'POST'])
 def quiz():

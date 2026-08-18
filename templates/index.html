@@ -8,14 +8,19 @@
 </head>
 <body class="login-body">
     <div class="login-container">
-        <h1>เข้าสู่ระบบเพื่อทำแบบทดสอบ</h1>
-        <p class="subtitle">วิชาความรู้เบื้องต้นและเทคโนโลยีดิจิทัล</p>
+        {% if subject_name %}
+        <h3 style="text-align: center; color: #ff6b81; margin-bottom: 10px;">{{ subject_name }}</h3>
+        {% endif %}
+        <h1 class="candy-title">เข้าสู่ระบบสอบ</h1>
+        <p class="subtitle">กรุณากรอกข้อมูลเพื่อเริ่มทำแบบทดสอบ</p>
         
         {% if error %}
-        <div class="alert alert-error">{{ error }}</div>
+        <div class="error-msg">
+            {{ error }}
+        </div>
         {% endif %}
         
-        <form method="POST" action="{{ url_for('index') }}" class="login-form">
+        <form method="POST" action="{{ url_for('login', subject=subject_id) }}" class="login-form">
             <div class="input-group">
                 <label for="student_code">รหัสนักศึกษา (3 หลักสุดท้าย)</label>
                 <input type="text" id="student_code" name="student_code" required 
